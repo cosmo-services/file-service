@@ -61,3 +61,15 @@ func (c *FileStorageConfig) GetPhysicalPath(logicalDir string) (string, error) {
 	}
 	return dir.Path, nil
 }
+
+func (c *FileStorageConfig) GetPublicDirectoryNames() []string {
+	var names []string
+
+	for name, dir := range c.Directories {
+		if dir.Access == "public" {
+			names = append(names, name)
+		}
+	}
+
+	return names
+}
