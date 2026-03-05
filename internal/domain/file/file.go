@@ -34,6 +34,7 @@ type FileMetaRepository interface {
 
 type File interface {
 	Read(p []byte) (n int, err error)
+	Close() error
 	MimeType() string
 }
 
