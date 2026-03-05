@@ -145,3 +145,48 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, result)
 }
+
+// DeleteFile deletes a file by its name and directory
+// @Summary Delete file
+// @Description Deletes a file from the specified directory. User must be the owner of the file.
+// @Tags files
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param directory path string true "Logical directory (avatars, attachments, documents)"
+// @Param filename path string true "File name"
+// @Success 200 {object} map[string]string "file deleted successfully"
+// @Failure 400 {object} map[string]string "directory and file name are required"
+// @Failure 401 {object} map[string]string "unauthorized"
+// @Failure 403 {object} map[string]string "access denied"
+// @Failure 404 {object} map[string]string "file not found"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /{directory}/{filename} [delete]
+func (c *FileController) DeleteFile(ctx *gin.Context) {
+	directory := ctx.Param("directory")
+	fileName := ctx.Param("filename")
+	userID := ctx.GetString("user_id")
+
+	if directory == "" || fileName == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "directory and file name are required",
+		})
+		return
+	}
+
+	if err := c.fileService.DeleteFileByUser(userID, fileName, directory); err != nil {
+		switch {
+		case errors.Is(err, file_domain.ErrFileNotFound):
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+		case errors.Is(err, file_domain.ErrNoAccess):
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "file deleted successfully",
+	})
+}

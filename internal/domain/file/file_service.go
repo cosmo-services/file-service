@@ -43,13 +43,30 @@ func (s *FileService) GetFile(userId string, fileName string, fileDir string) (F
 	return file, nil
 }
 
-func (s *FileService) DeleteFile(userId string, fileName string, fileDir string) error {
-	accessType, err := s.storage.GetAccessType(fileDir)
+func (s *FileService) DeleteFileByUser(userId string, fileName string, fileDir string) error {
+	meta, err := s.metaRepo.GetByName(fileName)
 	if err != nil {
 		return err
 	}
-	if accessType != AccessTypePublic {
+
+	if meta.UserId != userId {
 		return ErrNoAccess
+	}
+
+	if err := s.DeleteFile(fileName, fileDir); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *FileService) DeleteFile(fileName string, fileDir string) error {
+	exists, err := s.storage.Exists(fileName, fileDir)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrFileNotFound
 	}
 
 	storageErr := s.storage.Delete(fileName, fileDir)
