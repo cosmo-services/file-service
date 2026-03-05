@@ -68,7 +68,7 @@ func (s *FileService) ValidateAllowedFileType(mimeType string, fileType FileType
 
 func (s *FileService) GetAllowedMimeType(fileType FileType) []string {
 	switch fileType {
-	case FileTypeAvatar:
+	case FileTypeImage:
 		return []string{"jpg", "jpeg", "png", "gif", "bmp"}
 	}
 	return nil

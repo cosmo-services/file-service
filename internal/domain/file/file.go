@@ -5,15 +5,23 @@ import "time"
 type FileType string
 
 const (
-	FileTypeAvatar FileType = "avatar"
+	FileTypeImage FileType = "image"
+)
+
+type AccessType string
+
+const (
+	AccessTypePublic  AccessType = "public"
+	AccessTypePrivate AccessType = "private"
 )
 
 type FileMeta struct {
-	FileName  string    `json:"file_name"`
-	FileType  FileType  `json:"file_type"`
-	MimeType  string    `json:"mime_type"`
-	UserId    string    `json:"user_id"`
-	CreatedAt time.Time `json:"created_at"`
+	FileName   string     `json:"file_name"`
+	FileType   FileType   `json:"file_type"`
+	AccessType AccessType `json:"access_type"`
+	MimeType   string     `json:"mime_type"`
+	UserId     string     `json:"user_id"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 type FileMetaRepository interface {
@@ -32,5 +40,6 @@ type File interface {
 type FileStorage interface {
 	Save(file File) (fileName string, err error)
 	Delete(fileName string) (err error)
+	Get(fileName string) (file File, err error)
 	Exists(fileName string) (exists bool, err error)
 }
