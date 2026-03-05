@@ -1,28 +1,30 @@
 package file_infrastructure
 
 const (
-    CreateFileQuery = `
+	CreateFileQuery = `
         INSERT INTO files (
             file_name, 
             file_type, 
             access_type, 
+			directory,
             mime_type, 
             user_id, 
             created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING file_name, file_type, access_type, mime_type, user_id, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING file_name, file_type, access_type, directory, mime_type, user_id, created_at
     `
 
-    DeleteFileQuery = `
+	DeleteFileQuery = `
         DELETE FROM files 
         WHERE file_name = $1
     `
 
-    GetFileByNameQuery = `
+	GetFileByNameQuery = `
         SELECT 
             file_name, 
             file_type, 
             access_type, 
+			directory,
             mime_type, 
             user_id, 
             created_at
@@ -30,11 +32,12 @@ const (
         WHERE file_name = $1
     `
 
-    GetFilesByUserIDQuery = `
+	GetFilesByUserIDQuery = `
         SELECT 
             file_name, 
             file_type, 
             access_type, 
+			directory,
             mime_type, 
             user_id, 
             created_at
@@ -43,7 +46,7 @@ const (
         ORDER BY created_at DESC
     `
 
-    CheckFileExistsQuery = `
+	CheckFileExistsQuery = `
         SELECT EXISTS(
             SELECT 1 FROM files 
             WHERE file_name = $1

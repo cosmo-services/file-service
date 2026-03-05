@@ -9,6 +9,7 @@ import (
 	auth_infrastructure "main/internal/infrastructure/auth"
 	file_infrastructure "main/internal/infrastructure/file"
 
+	auth_api "main/internal/application/api/v2/auth"
 	file_api "main/internal/application/api/v2/file"
 	health_api "main/internal/application/api/v2/health"
 	swagger_api "main/internal/application/api/v2/swagger"
@@ -29,6 +30,7 @@ var CommonModules = fx.Options(
 
 	api.Module,
 	jobs.Module,
+	auth_api.Module,
 	health_api.Module,
 	swagger_api.Module,
 	file_api.Module,

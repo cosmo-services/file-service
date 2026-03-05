@@ -39,7 +39,7 @@ func NewFileController(
 // @Failure 403 {object} map[string]string "access denied"
 // @Failure 404 {object} map[string]string "directory not found"
 // @Failure 500 {object} map[string]string "internal server error"
-// @Router /files/{directory}/{filename} [get]
+// @Router /{directory}/{filename} [get]
 func (c *FileController) GetFile(ctx *gin.Context) {
 	directory := ctx.Param("directory")
 	fileName := ctx.Param("filename")
@@ -110,7 +110,7 @@ func (c *FileController) GetFile(ctx *gin.Context) {
 // @Failure 401 {object} map[string]string "unauthorized"
 // @Failure 403 {object} map[string]string "access denied"
 // @Failure 500 {object} map[string]string "internal server error"
-// @Router /avatars [post]
+// @Router /avatar [post]
 func (c *FileController) UploadAvatar(ctx *gin.Context) {
 	userID := ctx.GetString("user_id")
 

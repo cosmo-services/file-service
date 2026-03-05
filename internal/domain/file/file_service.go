@@ -18,7 +18,7 @@ func NewFileService(
 }
 
 func (s *FileService) UploadAvatar(userId string, file File) (*FileMeta, error) {
-	meta, err := s.createFile(userId, file, FileTypeImage, "avatars")
+	meta, err := s.createFile(userId, file, FileTypeImage, "avatar")
 	if err != nil {
 		return nil, err
 	}
@@ -77,12 +77,23 @@ func (s *FileService) ValidateAllowedFileType(mimeType string, fileType FileType
 func (s *FileService) GetAllowedMimeType(fileType FileType) []string {
 	switch fileType {
 	case FileTypeImage:
-		return []string{"jpg", "jpeg", "png", "gif", "bmp"}
+		return []string{
+			"image/jpeg",
+			"image/png",
+			"image/gif",
+			"image/bmp",
+			"image/webp",
+		}
 	}
 	return nil
 }
 
 func (s *FileService) createFile(userId string, file File, fileType FileType, fileDir string) (*FileMeta, error) {
+	accessType, err := s.storage.GetAccessType(fileDir)
+	if err != nil {
+		return nil, err
+	}
+
 	mimeType := file.MimeType()
 	if err := s.ValidateAllowedFileType(mimeType, fileType); err != nil {
 		return nil, err
@@ -94,10 +105,12 @@ func (s *FileService) createFile(userId string, file File, fileType FileType, fi
 	}
 
 	meta := &FileMeta{
-		FileName: fileName,
-		FileType: fileType,
-		MimeType: mimeType,
-		UserId:   userId,
+		FileName:   fileName,
+		FileType:   fileType,
+		MimeType:   mimeType,
+		AccessType: accessType,
+		Directory:  fileDir,
+		UserId:     userId,
 	}
 
 	if err := s.metaRepo.Create(meta); err != nil {
