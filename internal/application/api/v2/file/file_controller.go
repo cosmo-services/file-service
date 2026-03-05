@@ -25,13 +25,28 @@ func NewFileController(
 	}
 }
 
+// GetFile retrieves a file by its name and directory
+// @Summary Get file
+// @Description Returns a file from the specified directory. Public files don't require authentication, private files require JWT token
+// @Tags files
+// @Accept json
+// @Produce octet-stream
+// @Param directory path string true "Logical directory (avatars, attachments, documents)"
+// @Param filename path string true "File name"
+// @Success 200 {file} file "File content"
+// @Failure 400 {object} map[string]string "directory and file name are required"
+// @Failure 401 {object} map[string]string "authentication required for private files"
+// @Failure 403 {object} map[string]string "access denied"
+// @Failure 404 {object} map[string]string "directory not found"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /files/{directory}/{filename} [get]
 func (c *FileController) GetFile(ctx *gin.Context) {
 	directory := ctx.Param("directory")
-	filePath := ctx.Param("filepath")
+	fileName := ctx.Param("filename")
 
-	if directory == "" || filePath == "" {
+	if directory == "" || fileName == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "directory and file path are required",
+			"error": "directory and file name are required",
 		})
 		return
 	}
@@ -46,7 +61,7 @@ func (c *FileController) GetFile(ctx *gin.Context) {
 
 	switch dirInfo.Access {
 	case "public":
-		fullPath := filepath.Join(dirInfo.Path, filePath)
+		fullPath := filepath.Join(dirInfo.Path, fileName)
 		ctx.File(fullPath)
 
 	case "private":
@@ -58,7 +73,7 @@ func (c *FileController) GetFile(ctx *gin.Context) {
 			return
 		}
 
-		file, err := c.fileService.GetFile(userId, filePath, directory)
+		file, err := c.fileService.GetFile(userId, fileName, directory)
 		if err != nil {
 			if errors.Is(err, file_domain.ErrFileNotFound) {
 				ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -71,6 +86,7 @@ func (c *FileController) GetFile(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		defer file.Close()
 
 		ctx.DataFromReader(http.StatusOK, file.Size(), file.MimeType(), file, nil)
 
@@ -79,4 +95,53 @@ func (c *FileController) GetFile(ctx *gin.Context) {
 			"error": "invalid access type in config",
 		})
 	}
+}
+
+// UploadAvatar handles avatar upload for a user
+// @Summary Upload user avatar
+// @Description Uploads and sets a new avatar for the authenticated user. Only image files are allowed.
+// @Tags avatars
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param file formData file true "Avatar image file (jpeg, png, gif)"
+// @Success 200 {object} file_domain.FileMeta "Uploaded file metadata"
+// @Failure 400 {object} map[string]string "no file provided or invalid file type"
+// @Failure 401 {object} map[string]string "unauthorized"
+// @Failure 403 {object} map[string]string "access denied"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /avatars [post]
+func (c *FileController) UploadAvatar(ctx *gin.Context) {
+	userID := ctx.GetString("user_id")
+
+	multipartFile, _, err := ctx.Request.FormFile("file")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		return
+	}
+	defer multipartFile.Close()
+
+	file := &uploadedFile{
+		File: multipartFile,
+	}
+
+	if err := file.init(); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read file"})
+		return
+	}
+
+	result, err := c.fileService.UploadAvatar(userID, file)
+	if err != nil {
+		switch {
+		case errors.Is(err, file_domain.ErrNoAccess):
+			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		case errors.Is(err, file_domain.ErrFileTypeNotAllowed):
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }

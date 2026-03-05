@@ -17,34 +17,9 @@ func NewFileService(
 	}
 }
 
-func (s *FileService) CreateFile(userId string, file File, fileType FileType, fileDir string) (*FileMeta, error) {
-	accessType, err := s.storage.GetAccessType(fileDir)
+func (s *FileService) UploadAvatar(userId string, file File) (*FileMeta, error) {
+	meta, err := s.createFile(userId, file, FileTypeImage, "avatars")
 	if err != nil {
-		return nil, err
-	}
-	if accessType != AccessTypePublic {
-		return nil, ErrNoAccess
-	}
-
-	mimeType := file.MimeType()
-	if err := s.ValidateAllowedFileType(mimeType, fileType); err != nil {
-		return nil, err
-	}
-
-	fileName, err := s.storage.Save(file, fileDir)
-	if err != nil {
-		return nil, err
-	}
-
-	meta := &FileMeta{
-		FileName: fileName,
-		FileType: fileType,
-		MimeType: mimeType,
-		UserId:   userId,
-	}
-
-	if err := s.metaRepo.Create(meta); err != nil {
-		s.storage.Delete(fileName, fileDir)
 		return nil, err
 	}
 
@@ -105,4 +80,30 @@ func (s *FileService) GetAllowedMimeType(fileType FileType) []string {
 		return []string{"jpg", "jpeg", "png", "gif", "bmp"}
 	}
 	return nil
+}
+
+func (s *FileService) createFile(userId string, file File, fileType FileType, fileDir string) (*FileMeta, error) {
+	mimeType := file.MimeType()
+	if err := s.ValidateAllowedFileType(mimeType, fileType); err != nil {
+		return nil, err
+	}
+
+	fileName, err := s.storage.Save(file, fileDir)
+	if err != nil {
+		return nil, err
+	}
+
+	meta := &FileMeta{
+		FileName: fileName,
+		FileType: fileType,
+		MimeType: mimeType,
+		UserId:   userId,
+	}
+
+	if err := s.metaRepo.Create(meta); err != nil {
+		s.storage.Delete(fileName, fileDir)
+		return nil, err
+	}
+
+	return meta, nil
 }

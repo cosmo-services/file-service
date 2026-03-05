@@ -1,51 +1,45 @@
 version: '3.8'
 
 services:    
-  api:
+  file-service:
     build: .
     ports:
       - "${PORT}:${PORT}"
     env_file:
       - .env
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - PG_HOST=${PG_HOST}
-      - PG_PORT=${PG_PORT}
     depends_on:
-      - postgres
+      - file-db
     volumes:
       - go-modules:/go/pkg/mod
     restart: unless-stopped
     networks:
       - app-network
 
-  postgres:
+  file-db:
     image: postgres:15
     env_file:
       - .env
     environment:
-      - POSTGRES_DB=${PG_NAME}
-      - POSTGRES_USER=${PG_USER}
-      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_DB=${FILE_PG_NAME}
+      - POSTGRES_USER=${FILE_PG_USER}
+      - POSTGRES_PASSWORD=${FILE_PG_PASS}
       - POSTGRES_HOST_AUTH_METHOD=trust
     ports:
       - "${PG_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql:ro
+      - file-db_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${FILE_PG_USER} -d ${FILE_PG_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
   mongodb_data:
-  postgres_data:
+  file-db_data:
   go-modules:
 
 networks:

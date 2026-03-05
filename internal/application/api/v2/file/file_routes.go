@@ -30,13 +30,13 @@ func NewFileRoutes(
 func (r *FileRoutes) Setup() {
 	v2 := r.handler.Gin.Group("/api/v2")
 
-	v2.GET("/file/:directory/*filepath", r.authMiddleware.OptionalAuth(), r.fileController.GetFile)
+	v2.GET("/file/:directory/:filename", r.authMiddleware.OptionalAuth(), r.fileController.GetFile)
 
 	files := v2.Group("/file")
 	files.Use(r.authMiddleware.RequireAuth())
 	{
 
-		//files.POST("/:directory", r.fileController.UploadFile)
+		files.POST("/avatar", r.fileController.UploadAvatar)
 		//files.DELETE("/:file_id", r.fileController.DeleteFile)
 	}
 }
