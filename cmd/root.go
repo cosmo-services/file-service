@@ -30,6 +30,7 @@ func SetupApp(
 		OnStart: func(startCtx context.Context) error {
 			go func() {
 				nats.SetupSubscribers()
+				nats.SetupPublishers()
 			}()
 
 			go func() {
