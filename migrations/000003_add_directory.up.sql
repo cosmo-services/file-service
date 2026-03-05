@@ -1,0 +1,2 @@
+ALTER TABLE files
+ADD COLUMN directory VARCHAR(25) DEFAULT '';

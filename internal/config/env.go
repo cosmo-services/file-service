@@ -6,18 +6,17 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"go.uber.org/fx"
 )
 
 type Env struct {
 	AppEnv string `mapstructure:"APP_ENV"`
 	Port   string `mapstructure:"PORT"`
 
-	PGHost string `mapstructure:"PG_HOST"`
-	PGPort string `mapstructure:"PG_PORT"`
-	PGUser string `mapstructure:"PG_USER"`
-	PGPass string `mapstructure:"PG_PASS"`
-	PGName string `mapstructure:"PG_NAME"`
+	PGHost string `mapstructure:"FILE_PG_HOST"`
+	PGPort string `mapstructure:"FILE_PG_PORT"`
+	PGUser string `mapstructure:"FILE_PG_USER"`
+	PGPass string `mapstructure:"FILE_PG_PASS"`
+	PGName string `mapstructure:"FILE_PG_NAME"`
 
 	NatsHost string `mapstructure:"NATS_HOST"`
 	NatsPort string `mapstructure:"NATS_PORT"`
@@ -66,11 +65,11 @@ func (e *Env) bindEnv() {
 	e.AppEnv = os.Getenv("APP_ENV")
 	e.Port = os.Getenv("PORT")
 
-	e.PGHost = os.Getenv("PG_HOST")
-	e.PGPort = os.Getenv("PG_PORT")
-	e.PGUser = os.Getenv("PG_USER")
-	e.PGPass = os.Getenv("PG_PASS")
-	e.PGName = os.Getenv("PG_NAME")
+	e.PGHost = os.Getenv("FILE_PG_HOST")
+	e.PGPort = os.Getenv("FILE_PG_PORT")
+	e.PGUser = os.Getenv("FILE_PG_USER")
+	e.PGPass = os.Getenv("FILE_PG_PASS")
+	e.PGName = os.Getenv("FILE_PG_NAME")
 
 	e.NatsHost = os.Getenv("NATS_HOST")
 	e.NatsPort = os.Getenv("NATS_PORT")
@@ -85,7 +84,3 @@ func (e *Env) bindEnv() {
 		e.AllowedOrigins = strings.Split(val, ",")
 	}
 }
-
-var Module = fx.Options(
-	fx.Provide(NewEnv),
-)

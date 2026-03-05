@@ -14,6 +14,7 @@ require (
 	github.com/swaggo/swag v1.16.6
 	go.uber.org/fx v1.24.0
 	go.uber.org/zap v1.26.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

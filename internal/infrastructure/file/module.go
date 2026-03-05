@@ -1,0 +1,8 @@
+package file_infrastructure
+
+import "go.uber.org/fx"
+
+var Module = fx.Options(
+	fx.Provide(NewFileMetaRepository),
+	fx.Provide(NewLocalFileStorage),
+)
