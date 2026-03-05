@@ -49,11 +49,6 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 
-		if authHeader == "" {
-			ctx.Next()
-			return
-		}
-
 		token, err := pkg.ParseBearerToken(authHeader)
 		if err != nil {
 			ctx.Next()
@@ -62,7 +57,9 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 
 		payload, err := m.jwtClient.ValidateToken(token)
 		if err != nil {
-			ctx.Next()
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": err.Error(),
+			})
 			return
 		}
 

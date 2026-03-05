@@ -24,6 +24,19 @@ func NewLocalFileStorage(cfg *config.FileStorageConfig) domain.FileStorage {
 	}
 }
 
+func (s *localFileStorage) GetAccessType(directory string) (domain.AccessType, error) {
+	isPublic, err := s.config.IsPublic(directory)
+	if err != nil {
+		return domain.AccessTypeNone, err
+	}
+
+	if isPublic {
+		return domain.AccessTypePublic, nil
+	}
+
+	return domain.AccessTypePrivate, nil
+}
+
 func (s *localFileStorage) Save(f domain.File, directory string) (string, error) {
 	dirInfo, err := s.config.GetDirectoryInfo(directory)
 	if err != nil {
@@ -88,8 +101,15 @@ func (s *localFileStorage) Get(fileName string, directory string) (domain.File, 
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
+	stat, err := file.Stat()
+	if err != nil {
+		file.Close()
+		return nil, fmt.Errorf("failed to get file stats: %w", err)
+	}
+
 	return &localFile{
 		File:      file,
+		size:      stat.Size(),
 		mimeType:  s.detectMimeType(fileName),
 		closeFunc: file.Close,
 	}, nil
@@ -216,8 +236,13 @@ func (s *localFileStorage) validatePath(fullPath string, basePath string) error 
 
 type localFile struct {
 	*os.File
+	size      int64
 	mimeType  string
 	closeFunc func() error
+}
+
+func (f *localFile) Size() int64 {
+	return f.size
 }
 
 func (f *localFile) MimeType() string {

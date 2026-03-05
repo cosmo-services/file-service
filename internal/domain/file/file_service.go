@@ -17,14 +17,21 @@ func NewFileService(
 	}
 }
 
-func (s *FileService) CreateFile(file File, userId string, fileType FileType) (*FileMeta, error) {
+func (s *FileService) CreateFile(userId string, file File, fileType FileType, fileDir string) (*FileMeta, error) {
+	accessType, err := s.storage.GetAccessType(fileDir)
+	if err != nil {
+		return nil, err
+	}
+	if accessType != AccessTypePublic {
+		return nil, ErrNoAccess
+	}
+
 	mimeType := file.MimeType()
 	if err := s.ValidateAllowedFileType(mimeType, fileType); err != nil {
 		return nil, err
 	}
 
-	fileDirectory := s.getDirectoryByAccessType(AccessTypePublic)
-	fileName, err := s.storage.Save(file, fileDirectory)
+	fileName, err := s.storage.Save(file, fileDir)
 	if err != nil {
 		return nil, err
 	}
@@ -37,16 +44,40 @@ func (s *FileService) CreateFile(file File, userId string, fileType FileType) (*
 	}
 
 	if err := s.metaRepo.Create(meta); err != nil {
-		s.storage.Delete(fileName, fileDirectory)
+		s.storage.Delete(fileName, fileDir)
 		return nil, err
 	}
 
 	return meta, nil
 }
 
-func (s *FileService) DeleteFile(fileName string) error {
-	fileDirectory := s.getDirectoryByAccessType(AccessTypePublic)
-	storageErr := s.storage.Delete(fileName, fileDirectory)
+func (s *FileService) GetFile(userId string, fileName string, fileDir string) (File, error) {
+	accessType, err := s.storage.GetAccessType(fileDir)
+	if err != nil {
+		return nil, err
+	}
+	if accessType != AccessTypePublic {
+		return nil, ErrNoAccess
+	}
+
+	file, err := s.storage.Get(fileName, fileDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func (s *FileService) DeleteFile(userId string, fileName string, fileDir string) error {
+	accessType, err := s.storage.GetAccessType(fileDir)
+	if err != nil {
+		return err
+	}
+	if accessType != AccessTypePublic {
+		return ErrNoAccess
+	}
+
+	storageErr := s.storage.Delete(fileName, fileDir)
 	metaErr := s.metaRepo.Delete(fileName)
 
 	if storageErr != nil {
@@ -74,14 +105,4 @@ func (s *FileService) GetAllowedMimeType(fileType FileType) []string {
 		return []string{"jpg", "jpeg", "png", "gif", "bmp"}
 	}
 	return nil
-}
-
-func (s *FileService) getDirectoryByAccessType(accessType AccessType) string {
-	switch accessType {
-	case AccessTypePrivate:
-		return "private"
-	case AccessTypePublic:
-		return "public"
-	}
-	return ""
 }
