@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"main/internal/application/api/v2"
 	"main/internal/application/jobs"
+	"main/internal/application/nats"
 	"main/internal/config"
 	"main/pkg"
 
@@ -30,6 +31,7 @@ var CommonModules = fx.Options(
 
 	api.Module,
 	jobs.Module,
+	nats.Module,
 	auth_api.Module,
 	health_api.Module,
 	swagger_api.Module,

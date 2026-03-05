@@ -11,6 +11,7 @@ import (
 
 	"main/internal/application/api/v2"
 	"main/internal/application/jobs"
+	"main/internal/application/nats"
 	"main/internal/config"
 )
 
@@ -20,12 +21,17 @@ func SetupApp(
 	logger pkg.Logger,
 	handler pkg.RequestHandler,
 	routes api.Routes,
+	nats *nats.Nats,
 	workers jobs.Workers,
 ) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	lc.Append(fx.Hook{
 		OnStart: func(startCtx context.Context) error {
+			go func() {
+				nats.SetupSubscribers()
+			}()
+
 			go func() {
 				workers.Run(ctx)
 			}()
