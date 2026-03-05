@@ -1,0 +1,7 @@
+directory:
+  avatars:
+    access: public
+    path: "/uploads/avatars"
+  attachments:
+    access: private
+    path: "/uploads/attachments"

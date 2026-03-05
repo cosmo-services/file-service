@@ -23,7 +23,8 @@ func (s *FileService) CreateFile(file File, userId string, fileType FileType) (*
 		return nil, err
 	}
 
-	fileName, err := s.storage.Save(file)
+	fileDirectory := s.getDirectoryByAccessType(AccessTypePublic)
+	fileName, err := s.storage.Save(file, fileDirectory)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,7 @@ func (s *FileService) CreateFile(file File, userId string, fileType FileType) (*
 	}
 
 	if err := s.metaRepo.Create(meta); err != nil {
-		s.storage.Delete(fileName)
+		s.storage.Delete(fileName, fileDirectory)
 		return nil, err
 	}
 
@@ -44,7 +45,8 @@ func (s *FileService) CreateFile(file File, userId string, fileType FileType) (*
 }
 
 func (s *FileService) DeleteFile(fileName string) error {
-	storageErr := s.storage.Delete(fileName)
+	fileDirectory := s.getDirectoryByAccessType(AccessTypePublic)
+	storageErr := s.storage.Delete(fileName, fileDirectory)
 	metaErr := s.metaRepo.Delete(fileName)
 
 	if storageErr != nil {
@@ -72,4 +74,14 @@ func (s *FileService) GetAllowedMimeType(fileType FileType) []string {
 		return []string{"jpg", "jpeg", "png", "gif", "bmp"}
 	}
 	return nil
+}
+
+func (s *FileService) getDirectoryByAccessType(accessType AccessType) string {
+	switch accessType {
+	case AccessTypePrivate:
+		return "private"
+	case AccessTypePublic:
+		return "public"
+	}
+	return ""
 }

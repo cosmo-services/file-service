@@ -38,8 +38,8 @@ type File interface {
 }
 
 type FileStorage interface {
-	Save(file File) (fileName string, err error)
-	Delete(fileName string) (err error)
-	Get(fileName string) (file File, err error)
-	Exists(fileName string) (exists bool, err error)
+	Save(file File, directory string) (fileName string, err error)
+	Delete(fileName string, directory string) (err error)
+	Get(fileName string, directory string) (file File, err error)
+	Exists(fileName string, directory string) (exists bool, err error)
 }

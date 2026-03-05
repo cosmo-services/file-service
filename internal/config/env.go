@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"go.uber.org/fx"
 )
 
 type Env struct {
@@ -85,7 +84,3 @@ func (e *Env) bindEnv() {
 		e.AllowedOrigins = strings.Split(val, ",")
 	}
 }
-
-var Module = fx.Options(
-	fx.Provide(NewEnv),
-)
