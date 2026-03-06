@@ -40,4 +40,5 @@ func (n *Nats) SetupPublishers() {
 var Module = fx.Options(
 	fx.Provide(NewNats),
 	fx.Provide(NewFileSubscribeHandler),
+	fx.Provide(NewFileEventHandler),
 )

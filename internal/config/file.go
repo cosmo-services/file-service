@@ -17,7 +17,7 @@ type FileStorageConfig struct {
 }
 
 func NewFileStorageConfig() (*FileStorageConfig, error) {
-	cfg, err := LoadFileStorageConfig("./storage.yaml")
+	cfg, err := LoadFileStorageConfig("/config/storage.yaml")
 	if err != nil {
 		return nil, err
 	}
