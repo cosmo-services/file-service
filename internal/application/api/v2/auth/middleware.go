@@ -69,3 +69,17 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+func (m *AuthMiddleware) RequireActive() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		isActive := ctx.GetBool("is_active")
+		if !isActive {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "ACCOUNT_INACTIVE",
+			})
+			return
+		}
+
+		ctx.Next()
+	}
+}

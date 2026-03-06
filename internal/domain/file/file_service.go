@@ -1,19 +1,26 @@
 package file
 
-import "slices"
+import (
+	"main/internal/domain"
+	"slices"
+	"time"
+)
 
 type FileService struct {
 	metaRepo FileMetaRepository
 	storage  FileStorage
+	eventBus *domain.EventBus
 }
 
 func NewFileService(
 	metaRepo FileMetaRepository,
 	storage FileStorage,
+	eventBus *domain.EventBus,
 ) *FileService {
 	return &FileService{
 		metaRepo: metaRepo,
 		storage:  storage,
+		eventBus: eventBus,
 	}
 }
 
@@ -22,6 +29,13 @@ func (s *FileService) UploadAvatar(userId string, file File) (*FileMeta, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	s.eventBus.Emit("user.avatar.uploaded", AvatarUploadedEvent{
+		UserID:     meta.UserId,
+		FileName:   meta.FileName,
+		Directory:  meta.Directory,
+		UploadedAt: meta.CreatedAt,
+	})
 
 	return meta, nil
 }
@@ -43,13 +57,37 @@ func (s *FileService) GetFile(userId string, fileName string, fileDir string) (F
 	return file, nil
 }
 
-func (s *FileService) DeleteFile(userId string, fileName string, fileDir string) error {
-	accessType, err := s.storage.GetAccessType(fileDir)
+func (s *FileService) DeleteFileByUser(userId string, fileName string, fileDir string) error {
+	meta, err := s.metaRepo.GetByName(fileName)
 	if err != nil {
 		return err
 	}
-	if accessType != AccessTypePublic {
+
+	if meta.UserId != userId {
 		return ErrNoAccess
+	}
+
+	if err := s.DeleteFile(fileName, fileDir); err != nil {
+		return err
+	}
+
+	s.eventBus.Emit("user.file.deleted", UserFileDeletedEvent{
+		UserID:    meta.UserId,
+		FileName:  meta.FileName,
+		Directory: meta.Directory,
+		DeletedAt: time.Now(),
+	})
+
+	return nil
+}
+
+func (s *FileService) DeleteFile(fileName string, fileDir string) error {
+	exists, err := s.storage.Exists(fileName, fileDir)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrFileNotFound
 	}
 
 	storageErr := s.storage.Delete(fileName, fileDir)

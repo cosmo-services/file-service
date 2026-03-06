@@ -33,10 +33,10 @@ func (r *FileRoutes) Setup() {
 	v2.GET("/file/:directory/:filename", r.authMiddleware.OptionalAuth(), r.fileController.GetFile)
 
 	files := v2.Group("/file")
-	files.Use(r.authMiddleware.RequireAuth())
+	files.Use(r.authMiddleware.RequireAuth(), r.authMiddleware.RequireActive())
 	{
 
 		files.POST("/avatar", r.fileController.UploadAvatar)
-		//files.DELETE("/:file_id", r.fileController.DeleteFile)
+		files.DELETE("/:directory/:filename", r.fileController.DeleteFile)
 	}
 }

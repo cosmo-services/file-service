@@ -20,7 +20,7 @@ func NewSwaggerRoutes(handler pkg.RequestHandler) *SwaggerRoutes {
 }
 
 func (r *SwaggerRoutes) Setup() {
-	group := r.handler.Gin.Group("/api/v2/")
+	group := r.handler.Gin.Group("/api/v2/file/")
 
 	group.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
